@@ -34,6 +34,33 @@ app.get("/getIngredients/", (req,res) => {
     })
 })
 
+app.post("/new-ingredient/:name/:measurements", (req,response) => {
+    let ingredient = {name: req.params.name, measure: req.params.measurements};
+    
+    MongoClient.connect(url,function getIngredientData (err,db) {
+        if (err) {
+            console.log("Whoops.");
+            response.status(500).json({message:"Something went wrong"});
+            return;
+        }
+        var dbo = db.db("shoppingList");
+        dbo.collection("ingredients").insertOne(ingredient).then(function sendResponse (data) {
+            response.status(200).json({message: `Ingredient ${ingredient.name} added to db!`});
+            db.close();
+        }).catch(function handleError (err) {
+            console.log(`Error code: ${err.code} ==> Unique constraint failed.`);
+            if (err.code==11000){
+                response.status(500).json({message:"This ingridient alreay exists in database!"});
+                db.close();
+            }
+            else {
+                response.status(500).json({message:"Something went wrong"});
+                db.close();
+            }    
+        })
+    })   
+})
+
 app.listen(port, () => {
     console.log(`running at port ${port}`);
 })
