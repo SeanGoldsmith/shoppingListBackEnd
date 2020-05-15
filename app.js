@@ -34,9 +34,36 @@ app.get("/getIngredients/", (req,res) => {
     })
 })
 
+app.get("/getIngredient/:name/",(req,res)=> {
+    var ingredientName = req.params.name;
+    MongoClient.connect(url, function(err,db) {
+        if (err) {
+            console.log("Couldn't connect to database.");
+            res.status(500).json({message:"Could not connect to database."})
+            return;
+        }
+        var dbo = db.db("shoppingList");
+        dbo.collection("ingredients").findOne({name:ingredientName},function sendResponse(err,result) {
+            if (err) {
+                console.log("Something broke.");
+                res.status(500).json({message: "Something Broke."});
+                db.close();
+                return;
+            }
+            if (result!==null){
+                res.status(200).json(result);
+            }
+            else {
+                res.status(404).json({message: "We couldn't find that ingredient."});
+            }
+            db.close();
+        });
+    })
+})
+
 app.post("/new-ingredient/:name/:measurements", (req,response) => {
     let ingredient = {name: req.params.name, measure: req.params.measurements};
-    
+
     MongoClient.connect(url,function getIngredientData (err,db) {
         if (err) {
             console.log("Whoops.");
