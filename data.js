@@ -91,7 +91,16 @@ var ings2 = [
     "measure":"count"},
     {"name":"flour",
     "amount":2,
+    "measure":"cups"},
+    {"name":"beer",
+    "amount":2,
     "measure":"cups"}
+]
+var ings3 = [
+    {"name":"beer",
+    "amount":16,
+    "measure":"tbsp"}
 ]
 console.log(addToMaster(masterList,ings));
 console.log(addToMaster(masterList,ings2));
+console.log(addToMaster(masterList,ings3));
