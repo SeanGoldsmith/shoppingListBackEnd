@@ -1,3 +1,4 @@
+var helpers = require("./modules/helpers");
 const express = require("express");
 const app = express();
 const bodyparser = require("body-parser");
@@ -16,17 +17,17 @@ app.use(function (request,response,next) {
 })
 
 app.get("/getIngredients/", (req,res) => {
-    MongoClient.connect(url, function(err,db) {
+    MongoClient.connect(url,{ useUnifiedTopology: true}, function(err,db) {
         if (err) {
             console.log("Whoops");
-            res.status(500).json({message: "We broke it. Big time."});
+            res.status(400).json({message: "We broke it. Big time."});
             return;
         }
         var dbo = db.db("shoppingList");
         dbo.collection("ingredients").find({}).toArray(function(err,response) {
             if (err) {
                 console.log("Error in Ingredients call.");
-                res.status(500).json({message: "Something went wrong."});
+                res.status(400).json({message: "Something went wrong."});
             }
             db.close();
             res.status(200).send(response);
@@ -36,7 +37,7 @@ app.get("/getIngredients/", (req,res) => {
 
 app.get("/getIngredient/:name/",(req,res)=> {
     var ingredientName = req.params.name;
-    MongoClient.connect(url, function(err,db) {
+    MongoClient.connect(url,{ useUnifiedTopology: true}, function(err,db) {
         if (err) {
             console.log("Couldn't connect to database.");
             res.status(500).json({message:"Could not connect to database."})
@@ -46,7 +47,7 @@ app.get("/getIngredient/:name/",(req,res)=> {
         dbo.collection("ingredients").findOne({name:ingredientName},function sendResponse(err,result) {
             if (err) {
                 console.log("Something broke.");
-                res.status(500).json({message: "Something Broke."});
+                res.status(400).json({message: "Something Broke."});
                 db.close();
                 return;
             }
@@ -63,11 +64,14 @@ app.get("/getIngredient/:name/",(req,res)=> {
 
 app.post("/new-ingredient/:name/:measurements", (req,response) => {
     let ingredient = {name: req.params.name, measure: req.params.measurements};
-
-    MongoClient.connect(url,function getIngredientData (err,db) {
+    if (!helpers.validateIngredients(ingredient)){
+        response.status(400).json({message:"Ingredient Validation failed"});
+        return;
+    }
+    MongoClient.connect(url,{ useUnifiedTopology: true},function getIngredientData (err,db) {
         if (err) {
             console.log("Whoops.");
-            response.status(500).json({message:"Something went wrong"});
+            response.status(400).json({message:"Something went wrong"});
             return;
         }
         var dbo = db.db("shoppingList");
@@ -75,19 +79,47 @@ app.post("/new-ingredient/:name/:measurements", (req,response) => {
             response.status(200).json({message: `Ingredient ${ingredient.name} added to db!`});
             db.close();
         }).catch(function handleError (err) {
-            console.log(`Error code: ${err.code} ==> Unique constraint failed.`);
             if (err.code==11000){
-                response.status(500).json({message:"This ingridient alreay exists in database!"});
+                response.status(400).json({message:"This ingridient alreay exists in database!",
+                                           Error: `Code: ${err.code} ==> Unique constraint failed.`});
                 db.close();
             }
             else {
-                response.status(500).json({message:"Something went wrong"});
+                response.status(400).json({message:"Something went wrong"});
                 db.close();
             }    
         })
     })   
 })
 
+app.post("/new-recipe/", (req,response) => {
+    let recipe = req.body;
+    if(!helpers.validateRecipes(recipe)) {
+        response.status(400).json({"message":"Recipe Failed Validation"});
+        return;
+    }
+    MongoClient.connect(url,{ useUnifiedTopology: true},function addRecipe (err,db) {
+        if (err) {
+            response.status(400).json({message: "something went wrong"});
+            db.close();
+            return
+        }
+        var dbo = db.db("shoppingList");
+        dbo.collection("recipes").insertOne(recipe).then(function sendResponse(data) {
+            response.status(200).json({message:`Recipe ${recipe.name} added to db!`});
+            db.close();
+        }).catch(function handleError(err) {
+            response.status(400).json({message: "something went wrong. Check your obj format"});
+            db.close();
+        })
+    })
+})
+
 app.listen(port, () => {
     console.log(`running at port ${port}`);
 })
+
+var newRecipe = {
+    "name":"Fried Chicken",
+    "Ingredients":[{"name":"chicken","measure":"solid"},{"name":"flour","measure":"solid"}],
+}
