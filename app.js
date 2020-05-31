@@ -1,4 +1,5 @@
 var helpers = require("./modules/helpers");
+var listMaker = require("./modules/data");
 const express = require("express");
 const app = express();
 const bodyparser = require("body-parser");
@@ -62,8 +63,15 @@ app.get("/getIngredient/:name/",(req,res)=> {
     })
 })
 
-app.post("/new-ingredient/:name/:measurements", (req,response) => {
-    let ingredient = {name: req.params.name, measure: req.params.measurements};
+app.post("/new-ingredient/:name/:isMeasuredByCount", (req,response) => {
+    if(!helpers.boolCheck(req.params.isMeasuredByCount)) {
+        console.log(req.params.isMeasuredByCount);
+        response.status(400).json({message:"Second parameter is not a valid bool value."});
+        return;
+    }
+    var checkMeasure = (req.params.isMeasuredByCount==true);
+    console.log(typeof(checkMeasure));
+    var ingredient = {"name": req.params.name,"isMeasuredByCount":checkMeasure};
     if (!helpers.validateIngredients(ingredient)){
         response.status(400).json({message:"Ingredient Validation failed"});
         return;
@@ -115,6 +123,19 @@ app.post("/new-recipe/", (req,response) => {
     })
 })
 
+app.post("/new-shopping-list/", (req,res) => {
+    var recipeList = req.body;
+    async function processResponse (data) {
+        return listMaker.runAdditions(data);
+    }
+    processResponse(recipeList).then(data => {
+        console.log(data);
+        res.json(data);
+    }) .catch(err => {
+        res.status(500).json({"message":err});
+    })
+});
+
 app.listen(port, () => {
     console.log(`running at port ${port}`);
 })
@@ -122,4 +143,5 @@ app.listen(port, () => {
 var newRecipe = {
     "name":"Fried Chicken",
     "Ingredients":[{"name":"chicken","measure":"solid"},{"name":"flour","measure":"solid"}],
+    "link":"http://goodeats.com",
 }
