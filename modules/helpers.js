@@ -1,6 +1,6 @@
 module.exports = {
     validateIngredients: function (ing) {
-        if(ing.name && ing.measure && (ing.measure=="solid"||ing.measure=="liquid")) {
+        if(ing.name && ing.hasOwnProperty('isMeasuredByCount') && (typeof(ing.isMeasuredByCount)=='boolean')) {
             return true;
         }
         else {
@@ -18,6 +18,12 @@ module.exports = {
             }
         }
         return false;
+    },
+    boolCheck: function(value) {
+        if (value=="true" || value=="false") {
+            return true;
+        }
+        else return false;
     }
 }
 
