@@ -63,6 +63,19 @@ app.get("/getIngredient/:name/",(req,res)=> {
     })
 })
 
+app.get("/recipes/",(req,response) => {
+    MongoClient.connect(url,{ useUnifiedTopology: true},function getRecipies (err,db) {
+        if(err) {
+            response.status(400).json({message:"Something went wrong"});
+            return;
+        }
+        var dbo = db.db("shoppingList");
+        dbo.collection("recipes").find({}).toArray().then(data => {
+            response.status(200).json(data);
+        })
+    })
+})
+
 app.post("/new-ingredient/:name/:isMeasuredByCount", (req,response) => {
     if(!helpers.boolCheck(req.params.isMeasuredByCount)) {
         console.log(req.params.isMeasuredByCount);
@@ -70,8 +83,8 @@ app.post("/new-ingredient/:name/:isMeasuredByCount", (req,response) => {
         return;
     }
     var checkMeasure = (req.params.isMeasuredByCount==true);
-    console.log(typeof(checkMeasure));
-    var ingredient = {"name": req.params.name,"isMeasuredByCount":checkMeasure};
+    console.log(checkMeasure);
+    var ingredient = {"name": req.params.name,"isMeasuredByCount":req.params.isMeasuredByCount};
     if (!helpers.validateIngredients(ingredient)){
         response.status(400).json({message:"Ingredient Validation failed"});
         return;
