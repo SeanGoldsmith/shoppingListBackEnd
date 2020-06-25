@@ -17,22 +17,22 @@ module.exports = {
             recipe.forEach(elem => {
                 //if The ingredient has not been added to master and is measured by volume
                 if((!masterList[elem.name]) && !(elem.measure=="count")) {
-                    masterList[elem.name] = {"amount":this.convertToTbsp(elem),"measure":"tbsp"};
+                    masterList[elem.name] = {"amount":this.convertToTbsp(parseFloat(elem)),"measure":"tbsp"};
                 }
                 // if item has not been added to master and is measured by count
                 else if ((!masterList[elem.name]) && (elem.measure=="count")) {
-                    masterList[elem.name] = {"amount":elem.amount,"measure":elem.measure};
+                    masterList[elem.name] = {"amount":parseFloat(elem.amount),"measure":elem.measure};
                 }
                 //if the item exists on master and is measured by count.
                 else if((masterList[elem.name]) && (masterList[elem.name].measure=="count")){
                     if(elem.measure!=="count"){
                         throw `Problem with ${elem.name}. Check your measurments`;
                     }
-                    masterList[elem.name].amount+=elem.amount;
+                    masterList[elem.name].amount+=parseFloat(elem.amount);
                 }
                 //if item exists on master and is measured by volume
                 else {
-                    masterList[elem.name].amount += this.convertToTbsp(elem);
+                    masterList[elem.name].amount += this.convertToTbsp(parseFloat(elem));
                 }
             })
             // console.log(JSON.stringify(masterList,null,2));
