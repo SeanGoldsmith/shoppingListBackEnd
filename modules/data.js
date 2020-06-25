@@ -17,7 +17,7 @@ module.exports = {
             recipe.forEach(elem => {
                 //if The ingredient has not been added to master and is measured by volume
                 if((!masterList[elem.name]) && !(elem.measure=="count")) {
-                    masterList[elem.name] = {"amount":this.convertToTbsp(parseFloat(elem)),"measure":"tbsp"};
+                    masterList[elem.name] = {"amount":this.convertToTbsp(elem),"measure":"tbsp"};
                 }
                 // if item has not been added to master and is measured by count
                 else if ((!masterList[elem.name]) && (elem.measure=="count")) {
@@ -32,7 +32,7 @@ module.exports = {
                 }
                 //if item exists on master and is measured by volume
                 else {
-                    masterList[elem.name].amount += this.convertToTbsp(parseFloat(elem));
+                    masterList[elem.name].amount += this.convertToTbsp(elem);
                 }
             })
             // console.log(JSON.stringify(masterList,null,2));
@@ -45,18 +45,18 @@ module.exports = {
         var totalInTbsp = 0;
         switch (ing.measure) {
             case "cups":
-                totalInTbsp+=(ing.amount*16);
+                totalInTbsp+=(parseFloat(ing.amount)*16);
                 break;
             case "tbsp":
-                totalInTbsp+=(ing.amount);
+                totalInTbsp+=(parseFloat(ing.amount));
                 break;
             case "tsp":
-                totalInTbsp+=(ing.amount/3);
+                totalInTbsp+=(parseFloat(ing.amount)/3);
                 break;
             case "count":
             throw `Problem with ${ing.name}. Check your measurements.`;
         }
-        return totalInTbsp;
+        return parseFloat(totalInTbsp);
     },
     gatherOutput: function(finalList) {
         const listKeys = Object.keys(finalList);
